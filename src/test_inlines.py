@@ -1,11 +1,11 @@
 import unittest
-from inlines import(
+from inline_markdown import (
     split_nodes_delimiter,
-    extract_markdown_images,
-    extract_markdown_links,
     split_nodes_image,
     split_nodes_link,
     text_to_textnodes,
+    extract_markdown_links,
+    extract_markdown_images,
 )
 
 from textnode import TextNode, TextType
@@ -75,6 +75,18 @@ class TestInlineMarkdown(unittest.TestCase):
                 TextNode("bold", TextType.BOLD),
                 TextNode(" and ", TextType.TEXT),
                 TextNode("italic", TextType.ITALIC),
+            ],
+            new_nodes,
+        )
+
+    def test_delim_code(self):
+        node = TextNode("This is text with a `code block` word", TextType.TEXT)
+        new_nodes = split_nodes_delimiter([node], "`", TextType.CODE)
+        self.assertListEqual(
+            [
+                TextNode("This is text with a ", TextType.TEXT),
+                TextNode("code block", TextType.CODE),
+                TextNode(" word", TextType.TEXT),
             ],
             new_nodes,
         )
@@ -159,7 +171,6 @@ class TestInlineMarkdown(unittest.TestCase):
             new_nodes,
         )
 
-
     def test_text_to_textnodes(self):
         nodes = text_to_textnodes(
             "This is **text** with an _italic_ word and a `code block` and an ![image](https://i.imgur.com/zjjcJKZ.png) and a [link](https://boot.dev)"
@@ -179,7 +190,6 @@ class TestInlineMarkdown(unittest.TestCase):
             ],
             nodes,
         )
-
 
 
 if __name__ == "__main__":

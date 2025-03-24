@@ -1,7 +1,7 @@
 from enum import Enum
 
 from htmlnode import ParentNode
-from inlines import text_to_textnodes
+from inline_markdown import text_to_textnodes
 from textnode import text_node_to_html_node, TextNode, TextType
 
 
@@ -14,8 +14,6 @@ class BlockType(Enum):
     ULIST = "unordered_list"
 
 
-
-
 def markdown_to_blocks(markdown):
     blocks = markdown.split("\n\n")
     filtered_blocks = []
@@ -25,7 +23,6 @@ def markdown_to_blocks(markdown):
         block = block.strip()
         filtered_blocks.append(block)
     return filtered_blocks
-
 
 
 def block_to_block_type(block):
@@ -55,7 +52,6 @@ def block_to_block_type(block):
     return BlockType.PARAGRAPH
 
 
-
 def markdown_to_html_node(markdown):
     blocks = markdown_to_blocks(markdown)
     children = []
@@ -82,6 +78,35 @@ def block_to_html_node(block):
     raise ValueError("invalid block type")
 
 
+def text_to_children(text):
+    text_nodes = text_to_textnodes(text)
+    children = []
+    for text_node in text_nodes:
+        html_node = text_node_to_html_node(text_node)
+        children.append(html_node)
+    return children
+
+
+def paragraph_to_html_node(block):
+    lines = block.split("\n")
+    paragraph = " ".join(lines)
+    children = text_to_children(paragraph)
+    return ParentNode("p", children)
+
+
+def heading_to_html_node(block):
+    level = 0
+    for char in block:
+        if char == "#":
+            level += 1
+        else:
+            break
+    if level + 1 >= len(block):
+        raise ValueError(f"invalid heading level: {level}")
+    text = block[level + 1 :]
+    children = text_to_children(text)
+    return ParentNode(f"h{level}", children)
+
 
 def code_to_html_node(block):
     if not block.startswith("```") or not block.endswith("```"):
@@ -91,7 +116,6 @@ def code_to_html_node(block):
     child = text_node_to_html_node(raw_text_node)
     code = ParentNode("code", [child])
     return ParentNode("pre", [code])
-
 
 
 def olist_to_html_node(block):
@@ -112,41 +136,6 @@ def ulist_to_html_node(block):
         children = text_to_children(text)
         html_items.append(ParentNode("li", children))
     return ParentNode("ul", html_items)
-
-
-
-
-def heading_to_html_node(block):
-    level = 0
-    for char in block:
-        if char == "#":
-            level += 1
-        else:
-            break
-    if level + 1 >= len(block):
-        raise ValueError(f"invalid heading level: {level}")
-    text = block[level + 1 :]
-    children = text_to_children(text)
-    return ParentNode(f"h{level}", children)
-
-
-
-def paragraph_to_html_node(block):
-    lines = block.split("\n")
-    paragraph = " ".join(lines)
-    children = text_to_children(paragraph)
-    return ParentNode("p", children)
-
-
-
-def text_to_children(text):
-    text_nodes = text_to_textnodes(text)
-    children = []
-    for text_node in text_nodes:
-        html_node = text_node_to_html_node(text_node)
-        children.append(html_node)
-    return children
-
 
 
 def quote_to_html_node(block):
